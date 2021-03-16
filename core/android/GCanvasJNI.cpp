@@ -324,7 +324,7 @@ JNIEXPORT void JNICALL Java_com_taobao_gcanvas_GCanvasJNI_render(
             // 0x60000001 (means WEBGL) to be fed into `QueueProc()`
             // in `core/src/GCanvasWeex.cpp`.
             const char *result = theCanvas->CallNative(0x20000001, rc);
-            if (result) {
+            if (result != nullptr && strlen(result) != 0)  {
                 delete result;
             }
             je->ReleaseStringUTFChars(renderCommands, rc);

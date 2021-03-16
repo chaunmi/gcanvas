@@ -315,7 +315,15 @@ JNIEXPORT void JNICALL Java_com_taobao_gcanvas_GCanvasJNI_render(
         LOG_D("Java_com_taobao_gcanvas_GCanvasJNI_render, cmd=%s", rc);
         int length = je->GetStringUTFLength(renderCommands);
         if (0 != length) {
-            const char *result = theCanvas->CallNative(0x60000001, rc);
+            // Since `docs/Guide_Custom_GCanvas_Bridge.md` said
+            // `extendCallNative` is iOS only, and `getContext('webgl')`
+            // against `packages/gcanvas/src/env/canvas.js` will
+            // invoke `render()` thus `extendCallNative()` in
+            // `packages/gcanvas/src/bridge/react-native.js`, so
+            // 0x20000001 (means CANVAS) is better than
+            // 0x60000001 (means WEBGL) to be fed into `QueueProc()`
+            // in `core/src/GCanvasWeex.cpp`.
+            const char *result = theCanvas->CallNative(0x20000001, rc);
             if (result) {
                 delete result;
             }

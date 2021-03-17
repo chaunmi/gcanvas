@@ -46,12 +46,11 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation project(':android:gcanvas_library')
-    implementation 'com.taobao.gcanvas.adapters:img:1.0.1'
-//    implementation compileOnly('com.taobao.gcanvas:core:1.0.6')
+    api project(':android:gcanvas_library')
+    api project(':android:adapters:bridge_adapter')
 }
 
 project.ext.id = rootProject.extensions.artifacts.BridgeSpec
 project.ext.meta.labels = ['Weex', 'ReactNative', 'GPU', 'OpenGL', 'GCanvas', "canvas", 'Customize Own Bridge', 'Bridge Specification']
 project.ext.meta.description = 'This package defines native interfaces that a customize GCanvas bridge must implements.'
-apply from: "${rootProject.projectDir}/publish.gradle"
+//apply from: "${rootProject.projectDir}/publish.gradle"

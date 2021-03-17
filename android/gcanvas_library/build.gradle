@@ -61,11 +61,11 @@ android {
 
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.alibaba:fastjson:1.1.54.android'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.alibaba:fastjson:1.1.54.android'
 }
 project.ext.id = rootProject.extensions.artifacts.Core
 project.ext.meta.labels = ['Weex', 'ReactNative', 'GPU', 'OpenGL', 'GCanvas', "canvas", 'WebGL', 'Rendering', 'High Performance']
 project.ext.meta.description = 'This package defines GCanvas main library.'
-apply from: "${rootProject.projectDir}/publish.gradle"
+//apply from: "${rootProject.projectDir}/publish.gradle"
 

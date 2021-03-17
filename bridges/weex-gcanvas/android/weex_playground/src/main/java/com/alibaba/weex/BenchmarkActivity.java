@@ -20,15 +20,19 @@
 package com.alibaba.weex;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.test.espresso.idling.CountingIdlingResource;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
 import com.alibaba.weex.commons.adapter.ImageAdapter;
+import com.taobao.gcanvas.bridges.weex.bu.GCanvasModule;
 import com.taobao.weex.IWXRenderListener;
 import com.taobao.weex.InitConfig;
 import com.taobao.weex.WXEnvironment;
@@ -48,21 +52,21 @@ public class BenchmarkActivity extends AppCompatActivity implements IWXRenderLis
       "http://h5.waptest.taobao.com/app/weextc031/build/TC_Monitor_List_WithAppendTree.js";
   public static CountingIdlingResource countingIdlingResource;
   private WXSDKInstance mInstance;
-  private LinearLayout root;
+  private FrameLayout root;
   private long startTime;
   private long endTime;
   private long duration;
   private boolean perfStart;
   private boolean perfEnd;
   private boolean isWeex;
-
+  private GCanvasModule module;
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    root = new LinearLayout(this);
+    root = new FrameLayout(this);
     root.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                                     ViewGroup.LayoutParams.MATCH_PARENT));
-    root.setOrientation(LinearLayout.VERTICAL);
+//    root.setOrientation(LinearLayout.VERTICAL);
     root.setContentDescription(ROOT);
     setContentView(root);
     root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -78,11 +82,18 @@ public class BenchmarkActivity extends AppCompatActivity implements IWXRenderLis
         }
       }
     });
-    WXEnvironment.isPerf = true;
-    WXSDKEngine.addCustomOptions("appName", "WXSample");
-    WXSDKEngine.addCustomOptions("appGroup", "WXApp");
-    WXSDKEngine.initialize(getApplication(),
-                           new InitConfig.Builder().setImgAdapter(new ImageAdapter()).build());
+    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+      @Override
+      public void run() {
+        module = new GCanvasModule(BenchmarkActivity.this);
+        module.init(root);
+      }
+    },2000);
+//    WXEnvironment.isPerf = true;
+//    WXSDKEngine.addCustomOptions("appName", "WXSample");
+//    WXSDKEngine.addCustomOptions("appGroup", "WXApp");
+//    WXSDKEngine.initialize(getApplication(),
+//                           new InitConfig.Builder().setImgAdapter(new ImageAdapter()).build());
   }
 
   @Override

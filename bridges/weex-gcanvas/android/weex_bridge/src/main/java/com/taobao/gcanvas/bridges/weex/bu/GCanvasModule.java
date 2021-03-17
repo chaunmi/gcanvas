@@ -60,12 +60,12 @@ public class GCanvasModule implements Destroyable, GCanvasComponent.SurfaceOk {
                 GCanvasModule.this.render(component.getRef(),null);
             }
         },2000);
-        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                GCanvasModule.this.render(component.getRef(),null);
-            }
-        },3000);
+//        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                GCanvasModule.this.render(component.getRef(),null);
+//            }
+//        },3000);
     }
 
     private static class ModuleImpl extends AbsGBridgeModule<JSCallback> {

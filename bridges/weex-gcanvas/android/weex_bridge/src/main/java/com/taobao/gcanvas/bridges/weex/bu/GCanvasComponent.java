@@ -33,11 +33,11 @@ public class GCanvasComponent  implements TextureView.SurfaceTextureListener {
         return "999";
     }
     public GTextureView addGCanvasView() {
-        String backgroundColor = "rgba(255,255,255,255)";
+        String backgroundColor = "rgba(255,255,0,0)";
         mSurfaceView = new GTextureView(this.context, this.getRef());
 //        GCanvasJNI.registerWXCallNativeFunc(this.context);
         if (TextUtils.isEmpty(backgroundColor)) {
-            backgroundColor = "rgba(255,255,255,255)";
+            backgroundColor = "rgba(255,255,0,0)";
         }
         mSurfaceView.setBackgroundColor(backgroundColor);
         mSurfaceView.addSurfaceTextureListener(this);

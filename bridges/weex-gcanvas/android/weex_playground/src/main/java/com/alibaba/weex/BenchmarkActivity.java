@@ -66,7 +66,7 @@ public class BenchmarkActivity extends AppCompatActivity implements IWXRenderLis
     root = new FrameLayout(this);
     root.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                                     ViewGroup.LayoutParams.MATCH_PARENT));
-//    root.setOrientation(LinearLayout.VERTICAL);
+ //   root.setOrientation(LinearLayout.VERTICAL);
     root.setContentDescription(ROOT);
     setContentView(root);
     root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -89,6 +89,7 @@ public class BenchmarkActivity extends AppCompatActivity implements IWXRenderLis
         module.init(root);
       }
     },2000);
+
 //    WXEnvironment.isPerf = true;
 //    WXSDKEngine.addCustomOptions("appName", "WXSample");
 //    WXSDKEngine.addCustomOptions("appGroup", "WXApp");

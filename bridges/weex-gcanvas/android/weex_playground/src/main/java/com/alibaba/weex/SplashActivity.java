@@ -38,29 +38,36 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(R.layout.activity_splash);
 
         View textView = findViewById(R.id.fullscreen_content);
-        ScaleAnimation scaleAnimation = new ScaleAnimation(0.0f, 1.0f, 0.0f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-        RotateAnimation rotateAnimation = new RotateAnimation(0f, 360f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
 
-        AnimationSet animationSet = new AnimationSet(false);
-        animationSet.addAnimation(scaleAnimation);
-        animationSet.addAnimation(rotateAnimation);
-        animationSet.setDuration(1500);
-
-        animationSet.setAnimationListener(new Animation.AnimationListener() {
+        textView.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onAnimationStart(Animation animation) {
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
+            public void onClick(View v) {
                 startActivity(new Intent(SplashActivity.this, BenchmarkActivity.class));
-                finish();
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
             }
         });
-        textView.startAnimation(animationSet);
+//        ScaleAnimation scaleAnimation = new ScaleAnimation(0.0f, 1.0f, 0.0f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+//        RotateAnimation rotateAnimation = new RotateAnimation(0f, 360f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+//
+//        AnimationSet animationSet = new AnimationSet(false);
+//        animationSet.addAnimation(scaleAnimation);
+//        animationSet.addAnimation(rotateAnimation);
+//        animationSet.setDuration(1500);
+//
+//        animationSet.setAnimationListener(new Animation.AnimationListener() {
+//            @Override
+//            public void onAnimationStart(Animation animation) {
+//            }
+//
+//            @Override
+//            public void onAnimationEnd(Animation animation) {
+//                startActivity(new Intent(SplashActivity.this, BenchmarkActivity.class));
+//                finish();
+//            }
+//
+//            @Override
+//            public void onAnimationRepeat(Animation animation) {
+//            }
+//        });
+//        textView.startAnimation(animationSet);
     }
 }

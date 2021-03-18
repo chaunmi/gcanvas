@@ -41,14 +41,15 @@ namespace NodeBinding
             this->color = color;
         }
     };
-
-struct less_than_key
-{
-    inline bool operator() (const ColorStop& colorStop1, const ColorStop& colorStop2)
+    
+    struct less_than_key
     {
-        return (colorStop1.offset < colorStop2.offset);
-    }
-};
+        inline bool operator() (const ColorStop& colorStop1, const ColorStop& colorStop2)
+        {
+            return (colorStop1.offset < colorStop2.offset);
+        }
+    };
+
     class Gradient : public Napi::ObjectWrap<Gradient>
     {
     public:
@@ -57,13 +58,13 @@ struct less_than_key
         static Napi::Object NewInstance(Napi::Env env, const Napi::CallbackInfo &info);
         std::shared_ptr<LinearGradientInfo> mLinearGradientInfo = nullptr;
         std::shared_ptr<RadialGradientInfo> mRadialGradientInfo = nullptr;
-        int getCount() { return this->offsets.size(); }
+        int getCount() { return this->mColorStopSet.size(); }
         const std::vector<ColorStop> &getColorStops();
 
     private:
         static Napi::FunctionReference constructor;
         void addColorStop(const Napi::CallbackInfo &info);
-        std::vector<ColorStop> offsets;
+        std::vector<ColorStop> mColorStopSet;
 
         bool compareInterval(ColorStop colorStop1, ColorStop colorStop2)
         {

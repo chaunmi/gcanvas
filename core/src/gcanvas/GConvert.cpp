@@ -11,12 +11,14 @@
 #include <map>
 #include <sstream>
 #include <cstdlib>
-#include <string.h>
-#include <algorithm>
+#include <unordered_map>
+#include "../support/Log.h"
+#include <iomanip>
 
 namespace gcanvas {
-    GColorRGBA StrValueToColorRGBA(const char *value) {
-        static std::map<std::string, GColorRGBA> colorMap;
+
+
+    void InitColorMapIfEmpty(std::map<std::string, GColorRGBA>& colorMap) {
         if (colorMap.empty()) {
             colorMap.insert(std::pair<std::string, GColorRGBA>(
                     "black", {{0.0f / 255, 0.0f / 255, 0.0f / 255, 1.0f}}));
@@ -373,87 +375,337 @@ namespace gcanvas {
             colorMap.insert(std::pair<std::string, GColorRGBA>(
                     "transparent_white", {{1.f, 1.f, 1.f, 0.f}}));
         }
+    }
 
+
+    GColorRGBA StrValueToColorRGBA(const char *value) {
+        static std::map<std::string, GColorRGBA> colorMap;
         GColorRGBA c = {{0.0f, 0.0f, 0.0f, 1.0f}};
-        if (value == nullptr) {
-            return c;
-        }
+        StrValueToColorRGBA(value, c);
+        return c;
+    }
 
-        std::string colorVal = value;
-        colorVal.erase(std::remove(colorVal.begin(), colorVal.end(), ' '), colorVal.end());
-        std::transform(colorVal.begin(), colorVal.end(), colorVal.begin(),
-                       ::tolower);
-        value = colorVal.c_str();
 
-        std::map<std::string, GColorRGBA>::const_iterator iter =
-                colorMap.find(value);
-        if (iter != colorMap.end()) {
-            return iter->second;
-        }
-
+    /**
+     * support format:
+     * normal: rgb(100, 100, 100)
+     * percent: rgb(100%, 10%, 10%)
+     * no end: rgb(100, 100, 100
+     * space seperate: rgb(100 100 100)
+     * alpha: rgba(100 100 100 / 0.4)
+     */
+    bool HandleBraceRGBAColor(char* value, GColorRGBA& output) {
         int length = (int) strlen(value);
-        char str[] = "ffffff";
+        int current = 0;
+        std::string temp = "";
+        float colorV;
 
-        // #f0f format
-        if (length == 4) {
-            str[0] = str[1] = value[3];
-            str[2] = str[3] = value[2];
-            str[4] = str[5] = value[1];
-            unsigned int hex =
-                    (unsigned int) (0x00000000 | strtol(str, nullptr, 16));
-            c.rgba = {(hex & 0xff) / 255.0f, ((hex & 0xffff) >> 8) / 255.0f,
-                      (hex >> 16) / 255.0f, 1.0};
+        // separator format
+        bool isSpaceSep = false;
+        bool isCommaSep = false;
+        bool isPercent = false;
+
+        int start = 4;
+        if (value[start] == '(') {
+            start = 5;
         }
-            // #ff00ff format
-        else if (length == 7) {
-            str[0] = value[5];
-            str[1] = value[6];
-            str[2] = value[3];
-            str[3] = value[4];
-            str[4] = value[1];
-            str[5] = value[2];
-            unsigned int hex =
-                    (unsigned int) (0x00000000 | strtol(str, nullptr, 16));
-            c.rgba = {(hex & 0xff) / 255.0f, ((hex & 0xffff) >> 8) / 255.0f,
-                      (hex >> 16) / 255.0f, 1.0};
-        }
-            // assume rgb(255,0,255) or rgba(255,0,255,0.5) format
-        else {
-            if (strncmp(value, "rgb(", 4) == 0 || strncmp(value, "rgba(", 5) == 0) {
-                int current = 0;
-                for (int i = 4; i < length && current < 4; i++) {
-                    if (current == 3) {
-                        // If we have an alpha component, copy the rest of the wide
-                        // string into a char array and use atof() to parse it.
-                        char alpha[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-                        for (int j = 0; i + j < length - 1 && j < 7; j++) {
-                            alpha[j] = value[i + j];
-                        }
-                        double d = atof(alpha);
-                        if (d > 1) {
-                            d = 1;
-                        }
-                        c.components[current] = d;
-                        current++;
-                    } else if (isdigit(value[i])) {
-                        c.components[current] =
-                                (c.components[current] * 10 + (value[i] - '0'));
-                    } else if (value[i] == ',' || value[i] == ')') {
-                        c.components[current] /= 255.0f;
-                        current++;
+
+        bool endFlag;
+        bool startFlag = false;
+        for (int i = start; i < length && current < 4; i++) {
+            if (current == 3) { // parse alpha
+                // If we have an alpha component, copy the rest of the wide
+                // string into a char array and use atof() to parse it.
+                char alpha[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+                int offset = 0;
+                int k = 0;
+                char lastChar = '\0';
+                for (int j = 0; (i + j) <= length - 1 && j <= 7; j++) {
+                    offset = i + j;
+                    if (isdigit(value[offset]) || value[offset] == '.' || value[offset] == '%' || value[offset] == '-') {
+                        alpha[k] = value[i + j];
+                        lastChar = alpha[k];
+                        k++;
                     }
+                }
+                if (alpha[0] == '\0') { // wrong format
+                    return false;
+                }
+
+                size_t ret;
+                std::stof(alpha, &ret);
+
+                double d = atof(alpha);
+                if (lastChar == '%') {
+                    d = d / 100;
+                }
+                if (d > 1) {
+                    d = 1;
+                }
+                output.components[current] = d;
+                current ++;
+                // LOG_E("HandleBraceRGBAColor(alpha):str=%s, value=%f", alpha, d);
+            } else { // not alpha
+                // LOG_E("iterate value[%i]=%i", i, value[i]);
+                if (isdigit(value[i]) || value[i] == '.' || value[i] == '%' || value[i] == '-' || value[i] == '+') {
+                    // LOG_E("set start=true push back %c", value[i]);
+                    if (!startFlag) {
+                        startFlag = true;
+                    }
+                    // reset not end
+                    endFlag = false;
+                    temp.push_back(value[i]);
+                } else if (value[i] == ',' || value[i] == ')' || isspace(value[i])) { // end
+                    // LOG_E("is , ) or space: c=%c, set end=true", value[i]);
+                    endFlag = true;
+                } else { // wrong format
+                    // LOG_E("wrong digit: %c, exit", value[i]);
+                    return false;
+                }
+
+                if (i == length - 1) {
+                    endFlag = true;
+                }
+
+                if (startFlag && endFlag) {
+                    // check is all percent?
+                    char lastChar = temp.at(temp.length() - 1);
+                    if (current == 0) {
+                        if (value[i] == ',') {
+                            isCommaSep = true;
+                        } else if (isspace(value[i])) {
+                            isSpaceSep = true;
+                        }
+                        if (lastChar == '%') {
+                            isPercent = true;
+                        }
+                    } else {
+                        if (lastChar != '%' && isPercent) { // not percent consistent
+                            return false;
+                        }
+                        if (value[i] == ',' && !isCommaSep) { // not comma  consistent
+                            return false;
+                        }
+                        if (isspace(value[i]) && !isSpaceSep) { // not space consistent
+                            return false;
+                        }
+                    }
+
+                    colorV = (float)atof(temp.data());
+                    if (isPercent) {
+                        colorV = colorV < 0 ? 0 : (colorV > 100 ? 100 : colorV);
+                        output.components[current] = colorV / 100;
+                    } else {
+                        colorV = colorV < 0 ? 0 : (colorV > 255 ? 255 : colorV);
+                        output.components[current] = colorV / 255.0f;
+                    }
+
+                    //LOG_E("HandleBraceRGBAColor(RGB): temp=%s, current=%i, result=%f",
+                    //      temp.data(), current, output.components[current]);
+                    current++;
+                    temp = "";
+                    startFlag = false;
+                    endFlag = false;
                 }
             }
         }
 
-        return c;
+        if (current < 3) { // not match count, at least include r,g,b all
+            return false;
+        }
+        return true;
     }
+
+
+    GColorRGBA ParseRGBAFullString(char value[8]) {
+        GColorRGBA ret;
+        ParseRGBAFullString(value, ret);
+        return ret;
+    }
+
+
+    void ParseRGBAFullString(char value[8], GColorRGBA& output) {
+        unsigned long hex = 0x00000000 | strtoul(value, nullptr, 16);
+        output.rgba = {(hex >> 24) / 255.0f, ((hex & 0xff0000) >> 16) / 255.0f,
+                       ((hex & 0xff00) >> 8) / 255.0f, (hex & 0xff) / 255.0f};
+    }
+
+
+    bool StrValueToColorRGBA(const char *value, GColorRGBA& output) {
+        static std::map<std::string, GColorRGBA> colorMap;
+        InitColorMapIfEmpty(colorMap);
+
+        output = {{0.0f, 0.0f, 0.0f, 1.0f}};
+        if (value == nullptr) {
+            return false;
+        }
+
+        // LOG_E("StrValueToColorRGBA: input=%s", value);
+        if (value[0] == '#') {
+            int length = (int) strlen(value);
+            char str[] = "ffffffff";
+
+            // check value valid?
+            for (int i = 1; i < length; i++) {
+                if (!((value[i] >= '0' && value[i] <= '9') || (value[i] >= 'a' && value[i] <= 'f')
+                    || (value[i] >= 'A' && value[i] <= 'F'))) { // wrong format
+                    // LOG_E("check # wrong format: %c=", value[i]);
+                    return false;
+                }
+            }
+
+            if (length == 4) {
+                str[0] = str[1] = value[1];
+                str[2] = str[3] = value[2];
+                str[4] = str[5] = value[3];
+                output = ParseRGBAFullString(str);
+            } else if (length == 5) {
+                str[0] = str[1] = value[1];
+                str[2] = str[3] = value[2];
+                str[4] = str[5] = value[3];
+                str[6] = str[7] = value[4];
+                output = ParseRGBAFullString(str);
+            } else if (length == 7) { // #RRGGBB format
+                str[0] = value[1];
+                str[1] = value[2];
+                str[2] = value[3];
+                str[3] = value[4];
+                str[4] = value[5];
+                str[5] = value[6];
+                output = ParseRGBAFullString(str);
+            } else if (length == 9) { // #RRGGBBAA
+                memcpy(str, value + 1, 8);
+                output = ParseRGBAFullString(str);
+            } else {
+                return false;
+            }
+            // LOG_E("StrValueToColorRGBA: input=%s, output=%f %f %f %f", str,
+            //        output.components[0], output.components[1], output.components[2], output.components[3]);
+            return true;
+        } else {
+            std::string colorVal = value;
+            colorVal = Trim(value);
+            // colorVal.erase(std::remove(colorVal.begin(), colorVal.end(), ' '), colorVal.end());
+            std::transform(colorVal.begin(), colorVal.end(), colorVal.begin(), ::tolower);
+            value = colorVal.c_str();
+
+            // match color name
+            auto iter = colorMap.find(value);
+            if (iter != colorMap.end()) {
+                output = iter->second;
+                return true;
+            }
+
+            // handle hsla( format color (not support now)
+            if (strncmp(value, "hsl(", 4) == 0 || strncmp(value, "hsla(", 5) == 0) {
+                return false;
+            }
+
+            // handle rgb( | rgba(  format
+            if (strncmp(value, "rgb(", 4) == 0 || strncmp(value, "rgba(", 5) == 0) {
+                return HandleBraceRGBAColor((char*)value, output);
+            }
+            // parse error
+            return false;
+        }
+    }
+
+
+    std::string Trim(const std::string& str, const std::string& whitespace) {
+        const auto strBegin = str.find_first_not_of(whitespace);
+        if (strBegin == std::string::npos) {
+            return ""; // no content
+        }
+
+        const auto strEnd = str.find_last_not_of(whitespace);
+        const auto strRange = strEnd - strBegin + 1;
+
+        return str.substr(strBegin, strRange);
+    }
+
 
     std::string ColorToString(const GColorRGBA &color) {
         std::ostringstream ss;
-        ss << "rgba(" << (int) color.rgba.r
-           << "," << (int) color.rgba.g << "," << (int) color.rgba.b
+        ss << "rgba(" << (int) (color.rgba.r * 255)
+           << "," << (int) (color.rgba.g * 255) << "," << (int) (color.rgba.b * 255)
            << "," << (int) color.rgba.a << ")";
         return ss.str();
     }
+
+
+    /**
+     * convert #RRGGBBAA format
+     */
+    std::string ColorToRGBASharpString(const GColorRGBA &color) {
+        std::ostringstream ss;
+        ss << "#" << std::setfill ('0') << std::setw(2) << std::hex << (int) (color.rgba.r * 255)
+           << std::setfill ('0') << std::setw(2) << std::hex << (int) (color.rgba.g * 255)
+           << std::setfill ('0') << std::setw(2) << std::hex << (int) (color.rgba.b * 255);
+        if (color.rgba.a < 1.0f) {
+            ss << std::setfill ('0') << std::setw(2) << std::hex << (int) (color.rgba.a * 255);
+        }
+        return ss.str();
+    }
+
+
+    /**
+     * int (RGBA) convert to GColorRGBA
+     */
+    GColorRGBA IntValueToColorRGBA(int value) {
+        if (value == 0) {
+            return GColorTransparent;
+        }
+
+        GColorRGBA c;
+        c.rgba = {((value & 0xff000000) >> 24) / 255.0f, ((value & 0xff0000) >> 16) / 255.0f,
+                  ((value & 0xff00) >> 8) / 255.0f, (value & 0xff) / 255.0f };
+        return c;
+    }
+
+
+//    /*
+//     * H(Hue): 0 - 360 degree (integer)
+//     * S(Saturation): 0 - 1.00 (double)
+//     * V(Value): 0 - 1.00 (double)
+//     *
+//     * output[3]: Output, array size 3, int
+//     */
+//    void HSVtoRGB(int H, double S, double V, int output[3]) {
+//        double C = S * V;
+//        double X = C * (1 - abs(fmod(H / 60.0, 2) - 1));
+//        double m = V - C;
+//        double Rs, Gs, Bs;
+//
+//        if(H >= 0 && H < 60) {
+//            Rs = C;
+//            Gs = X;
+//            Bs = 0;
+//        } else if(H >= 60 && H < 120) {
+//            Rs = X;
+//            Gs = C;
+//            Bs = 0;
+//        } else if(H >= 120 && H < 180) {
+//            Rs = 0;
+//            Gs = C;
+//            Bs = X;
+//        } else if(H >= 180 && H < 240) {
+//            Rs = 0;
+//            Gs = X;
+//            Bs = C;
+//        } else if(H >= 240 && H < 300) {
+//            Rs = X;
+//            Gs = 0;
+//            Bs = C;
+//        } else {
+//            Rs = C;
+//            Gs = 0;
+//            Bs = X;
+//        }
+//
+//        output[0] = (int)((Rs + m) * 255);
+//        output[1] = (int)((Gs + m) * 255);
+//        output[2] = (int)((Bs + m) * 255);
+//    }
+
+
 }

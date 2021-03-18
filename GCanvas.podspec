@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "GCanvas"
-  s.version      = "1.1.1"
+  s.version      = "1.2.0"
   s.summary      = "GCanvas Source."
 
   s.description  = <<-DESC
@@ -30,8 +30,9 @@ Pod::Spec.new do |s|
                    'core/src/GCanvas.{hpp,cpp}',
                    'core/src/GCanvasWeex.{hpp,cpp}',
                    'core/src/GCanvasManager.{h,cpp}',
-                   'core/src/gcanvas/*.*',
-                   'core/src/gcanvas/shaders/*.*',
+                   'core/src/gcanvas/**/*.*',
+                   'core/src/commandbuffer/*.*',
+                   'core/src/webgl/*.*',
                    'core/src/support/DynArray.h',
                    'core/src/support/Encode.{h,cpp}',
                    'core/src/support/GLUtil.{h,cpp}',

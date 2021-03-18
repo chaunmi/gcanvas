@@ -9,7 +9,7 @@
 #ifndef GCANVAS_GPOINT_H
 #define GCANVAS_GPOINT_H
 
-#include "GGL.h"
+#include "GL/GGL.h"
 #include "GContext2dType.h"
 #include "export.h"
 
@@ -31,7 +31,6 @@ typedef union
     } rgba;
     GLfloat components[4];
 } GColorRGBA;
-
 
 
 typedef struct
@@ -79,8 +78,14 @@ static inline GPoint PointNormalize(GPoint v)
     return v;
 }
 
+static inline bool PointEqualToPoint(const GPoint &pt1, const GPoint &pt2)
+{
+    return pt1.x == pt2.x && pt1.y == pt2.y;
+}
+
 struct GRectf
 {
+    bool isTransformed = false; //坐标是否经过transform变换
     GPoint leftTop = {0, 0};
     GPoint bottomRight = {0, 0};
 
@@ -103,13 +108,13 @@ struct GRectf
     }
 };
 
-inline GRectf operator/(const GRectf &rect, float factor)
+inline GRectf operator *(const GRectf &rect, float factor )
 {
     GRectf result = rect;
-    result.leftTop.x /= factor;
-    result.leftTop.y /= factor;
-    result.bottomRight.x /= factor;
-    result.bottomRight.y /= factor;
+    result.leftTop.x *= factor;
+    result.leftTop.y *= factor;
+    result.bottomRight.x *= factor;
+    result.bottomRight.y *= factor;
     return result;
 }
 

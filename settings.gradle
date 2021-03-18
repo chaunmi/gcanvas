@@ -8,5 +8,7 @@ include ':android:adapters:bridge_adapter'
 include ':bridges:weex-gcanvas:android:weex_bridge'
 include ':bridges:weex-gcanvas:android:weex_playground'
 include ':bridges:react-native-gcanvas:android'
+project(':bridges:react-native-gcanvas:android').projectDir = new File('E:\\Github\\gcanvas-chaunmi\\bridges\\react-native-gcanvas\\android')
+include ':examples:ReactNativeGCanvasExample:android:app'
 
 

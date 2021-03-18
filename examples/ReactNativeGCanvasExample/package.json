@@ -8,8 +8,8 @@
   },
   "dependencies": {
     "gcanvas.js": "^0.0.5",
-    "react": "16.2.0",
-    "react-native": "0.53.0",
+    "react": "^16.2.0",
+    "react-native": "^0.53.0",
     "react-native-gcanvas": "^0.0.1"
   },
   "devDependencies": {

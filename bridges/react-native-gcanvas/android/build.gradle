@@ -25,9 +25,14 @@ android {
 }
 
 dependencies {
-    compile "com.taobao.gcanvas:corelib:1.0.2"
-    compile "com.taobao.gcanvas.bridges:spec:1.0.1"
-    compile "com.taobao.gcanvas.adapters:img_fresco:1.0.1"
+//    compile "com.taobao.gcanvas:corelib:1.0.2"
+//    compile "com.taobao.gcanvas.bridges:spec:1.0.1"
+//    compile "com.taobao.gcanvas.adapters:img_fresco:1.0.1"
+
+    implementation project(':android:gcanvas_library')
+    implementation project(':android:bridge_spec')
+    implementation project(':android:adapters:gcanvas_imageloader_fresco')
+
     compile fileTree(dir: 'libs', include: ['*.jar'])
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'

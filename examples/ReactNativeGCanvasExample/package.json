@@ -8,14 +8,14 @@
   },
   "dependencies": {
     "gcanvas.js": "^0.0.5",
-    "react": "^16.2.0",
-    "react-native": "^0.53.0",
+    "react": "^16.14.0",
+    "react-native": "^0.53.3",
     "react-native-gcanvas": "^0.0.1"
   },
   "devDependencies": {
     "babel-jest": "22.1.0",
-    "babel-preset-react-native": "4.0.0",
     "jest": "22.1.4",
+    "babel-preset-react-native": "3.0.2",
     "react-test-renderer": "16.2.0"
   },
   "jest": {

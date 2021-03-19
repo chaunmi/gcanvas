@@ -94,7 +94,7 @@ def enableSeparateBuildPerCPUArchitecture = false
 def enableProguardInReleaseBuilds = false
 
 android {
-    compileSdkVersion 23
+    compileSdkVersion 26
     buildToolsVersion "23.0.1"
 
     defaultConfig {
@@ -139,7 +139,7 @@ android {
 dependencies {
     compile project(':bridges:react-native-gcanvas:android')
     compile fileTree(dir: "libs", include: ["*.jar"])
-    compile "com.android.support:appcompat-v7:23.0.1"
+    implementation "com.android.support:appcompat-v7:26.0.2"
     compile "com.facebook.react:react-native:+"  // From node_modules
 }
 
@@ -148,4 +148,16 @@ dependencies {
 task copyDownloadableDepsToLibs(type: Copy) {
     from configurations.compile
     into 'libs'
+}
+
+configurations.all {
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+        def requested = details.requested
+        if (requested.group == 'com.android.support') {
+            // Skip multidex because it follows a different versioning pattern.
+            if (!requested.name.startsWith("multidex") && requested.name.startsWith("appcompat-v7")) {
+                details.useVersion '26.0.2'
+            }
+        }
+    }
 }

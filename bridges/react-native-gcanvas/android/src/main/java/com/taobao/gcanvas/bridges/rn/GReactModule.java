@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Point;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Display;
 import android.view.View;
 
@@ -39,23 +40,27 @@ import static com.taobao.gcanvas.bridges.spec.module.IGBridgeModule.ContextType.
  * @author ertong
  */
 public class GReactModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
-    private static final String NAME = "CanvasModule";
+    private static final String NAME = "GCanvasModule";
 
-    private static final String TAG = GReactModule.class.getSimpleName();
+    public static final String TAG = GReactModule.class.getSimpleName() + "_onpress";
 
     private HashMap<String, GReactTextureView> mViews = new HashMap<>();
 
     @Override
     public void onHostResume() {
-
+        Log.i(TAG, " onHostResume ");
     }
 
     @Override
     public void onHostPause() {
+        Log.i(TAG, " onHostPause ");
+
     }
 
     @Override
     public void onHostDestroy() {
+        Log.i(TAG, " onHostDestroy ");
+
         // release resource
         getReactApplicationContext().removeLifecycleEventListener(this);
         Iterator<Map.Entry<String, GReactTextureView>> iter = mViews.entrySet().iterator();
@@ -75,6 +80,10 @@ public class GReactModule extends ReactContextBaseJavaModule implements Lifecycl
         @Override
         public String enable(JSONObject data) {
             try {
+
+                Log.i(GReactModule.TAG, " RNModuleImpl enable " + data.toString());
+
+
                 final String refId = data.getString("componentId");
                 int viewTag = Integer.parseInt(refId);
 
@@ -86,9 +95,11 @@ public class GReactModule extends ReactContextBaseJavaModule implements Lifecycl
 
                 View v = activity.findViewById(viewTag);
                 if (v instanceof GReactTextureView) {
+                    Log.i(GReactModule.TAG, " RNModuleImpl GReactTextureView ");
                     mViews.put(refId, (GReactTextureView) v);
                     return Boolean.TRUE.toString();
                 }
+                Log.i(GReactModule.TAG, " RNModuleImpl false ");
 
                 return Boolean.FALSE.toString();
             } catch (Throwable e) {
@@ -101,21 +112,26 @@ public class GReactModule extends ReactContextBaseJavaModule implements Lifecycl
         public void setContextType(String canvasId, ContextType type) {
             GReactTextureView textureView = mViews.get(canvasId);
             if (null == textureView) {
-                GLog.e(TAG, "can not find canvas with id ===> " + canvasId);
+                GLog.e(GReactModule.TAG, "can not find canvas with id ===> " + canvasId);
                 return;
             }
+            GLog.i(GReactModule.TAG, "setContextType " + canvasId + ", type: " + type);
+
             GCanvasJNI.setContextType(textureView.getCanvasKey(), type.value());
         }
 
         @Override
         public void setDevicePixelRatio(String canvasId, double ratio) {
+            GLog.i(GReactModule.TAG, "setDevicePixelRatio " + canvasId + ", ratio: " + ratio);
+
         }
 
         @Override
         public void render(String canvasId, String cmd) {
+            GLog.i(GReactModule.TAG, "render " + canvasId + ", cmd: " + cmd);
             GReactTextureView textureView = mViews.get(canvasId);
             if (null == textureView) {
-                GLog.e(TAG, "can not find canvas with id ===> " + canvasId);
+                GLog.e(GReactModule.TAG, "can not find canvas with id ===> " + canvasId);
                 return;
             }
             GCanvasJNI.render(textureView.getCanvasKey(), cmd);
@@ -152,6 +168,8 @@ public class GReactModule extends ReactContextBaseJavaModule implements Lifecycl
         if (null == array || TextUtils.isEmpty(refId) || array.size() != 2) {
             return;
         }
+        GLog.e(TAG, "bindImageTexture " + refId);
+
         GReactTextureView textureView = mViews.get(refId);
         if (null == textureView) {
             GLog.e(TAG, "can not find canvas with id ===> " + refId);
@@ -168,13 +186,15 @@ public class GReactModule extends ReactContextBaseJavaModule implements Lifecycl
             GLog.d(TAG, "invalid input parameter");
             return;
         }
+        GLog.e(TAG, "preLoadImage ");
+
         try {
             JSONArray array = new JSONArray();
             array.put(args.getString(0));
             array.put(args.getInt(1));
             mImpl.preLoadImage(array, callback);
         } catch (Throwable e) {
-            GLog.e(TAG, e.getMessage(), e);
+            GLog.e(GReactModule.TAG, e.getMessage(), e);
             HashMap<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
             mImpl.invokeCallback(callback, error);
@@ -196,7 +216,10 @@ public class GReactModule extends ReactContextBaseJavaModule implements Lifecycl
     @ReactMethod
     public String enable(String args) {
         try {
+            Log.i(TAG, "  enable " + args);
+
             JSONObject json = new JSONObject(args);
+
             return mImpl.enable(json);
         } catch (JSONException e) {
             return Boolean.FALSE.toString();
@@ -236,8 +259,7 @@ public class GReactModule extends ReactContextBaseJavaModule implements Lifecycl
         display.getSize(size);
         double devicePixelRatio = size.x * 1.0 / size.y;
 //
-        GLog.d(TAG, "enable size " + size.toString());
-        GLog.d(TAG, "enable devicePixelRatio " + devicePixelRatio);
+        GLog.d(TAG, "setContextType size " + size.toString() + ", devicePixelRatio: " + devicePixelRatio);
 
         mImpl.setDevicePixelRatio(refId, devicePixelRatio);
 

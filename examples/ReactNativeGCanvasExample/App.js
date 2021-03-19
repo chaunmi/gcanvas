@@ -37,10 +37,14 @@ export default class App extends Component<{}> {
     var ref = this.refs.canvas_holder;
 
     var canvas_tag = findNodeHandle(ref);
+
+    console.log(">>>>>>>>onPressHandle...start  canvas_tag " + canvas_tag + ", NativeModules: " + (NativeModules == null) + ", GCanvasModule: " + (ReactNativeBridge.GCanvasModule == null) + ", platform: " + ReactNativeBridge.Platform.OS)
     // var canvas_tag = "2";
     var el = { ref:""+canvas_tag, style:{width:414, height:376}};
 
     ref = enable(el, {bridge: ReactNativeBridge});
+
+    console.log(">>>>>>>>onPressHandle...start  enable ")
 
     var ctx = ref.getContext('2d');
     //rect

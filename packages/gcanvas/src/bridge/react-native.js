@@ -23,10 +23,10 @@ const GBridge = {
   callEnable: (ref, configArray) => {
     commandsCache[ref] = [];
 
-    return GBridge.GCanvasModule.enable({
+    return GBridge.GCanvasModule.enable(JSON.stringify({
       componentId: ref,
       config: configArray
-    });
+    }));
   },
 
   callEnableDebug: () => {
